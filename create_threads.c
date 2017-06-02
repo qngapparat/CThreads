@@ -3,6 +3,22 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
+#include "error_handler.c"
+#include <sys/types.h>
+
+void cleanup(void* arg){
+
+    //TODO
+    FILE* f = (FILE*) arg;
+
+    if(fclose(f) == EOF){
+        perror("fclose");
+        exit(EXIT_FAILURE);
+    }
+
+    return;
+}
+
 
 void* generate_file(void* thread_number_pointer){
 
@@ -17,10 +33,19 @@ void* generate_file(void* thread_number_pointer){
     strcat(file_name, file_name_appendix);
     strcat(file_name, ".txt");
 
+    FILE* f = fopen(file_name, "w");
+
+    //create and push cancellation handler function to threads' handler stack
+    pthread_cleanup_push(cleanup, f);
+    //disable all cancellation handler blockers
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+
     sleep(rand() % 2);
 
-    int fd = open(file_name, O_RDWR | O_CREAT, 0666);
-    
+    fprintf(f, "%d", (int)gettid());
+
+
+
 }
 
 
