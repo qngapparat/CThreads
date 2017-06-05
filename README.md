@@ -2,7 +2,7 @@
 Practicing basic mutex functionality of POSIC threads to coordinate non-thread-safe operations in C.
 
 #### Runtime and performance analysis
-The following values are generated using BASH's build-in ```time``` (simplified version of ```/usr/bin/time```) with the syntax ```{ time ./task3spin.out;} 2>> times.txt``` (```time``` prints to ```stderr```, which has to be redirected with ```2>>```.).
+The following values are generated using BASH's build-in ```time``` (simplified version of ```/usr/bin/time```) with the syntax ```{ time ./prog.out;} 2>> runtime_log.txt``` (```time``` prints to ```stderr```, which has to be redirected with ```2>>```.).
 
 ##### Using ```pthread_mutex```:
 Unlike spinlocks, mutexes don't use busy waiting, thus reducing CPU usage, which is especially important for longer waiting periods. Thread execution is stopped temporarily, until the thread is woken up when the mutex is available again. Mutexes are arguably slightly more secure than Spinlocks, which can in some cases enter undefined states.
