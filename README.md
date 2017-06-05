@@ -22,10 +22,11 @@ A conditional variable works similar to a semaphore, in that it allows threads t
 
 However, it is necessary to use a while-loop as follows:
 
-    ```while(!RESUME) {
+```
+    while(!RESUME) {
             pthread_cond_wait(&queueCond, &queueMutex);
         }
-    ```
+```
 This is because it is possible that ```pthread_cond_wait``` can experience random "spurious wakeups", which would otherwise lead to the execution being resumed without necessarily ```!RESUME``` being ```true```.  [[1](https://stackoverflow.com/documentation/pthreads/8614/conditional-variables#t=201706051640532619188)]
 
 Surprisingly, this method yielded the longest execution time of the three by far. This might be due to the short length of the critical section, or the repeated access in the loop. Spinlocks, and even mutexes, requiring writes, seem to perform far better in this case. However, conditional variables elegantly solve the producer-consumer problem in this case, which makes it a trade off for speed.
