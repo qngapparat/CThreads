@@ -1,0 +1,17 @@
+Task 2 (using pthread_mutex):
+
+real	0m0.019s
+user	0m0.012s
+sys	0m0.012s
+
+Task 3 (using pthread_spinlock):
+
+real	0m0.020s
+user	0m0.056s
+sys	0m0.000s
+
+Task 3 (using pthread_cond):
+
+real	0m0.114s
+user	0m0.124s
+sys	0m0.200s

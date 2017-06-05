@@ -8,8 +8,8 @@
 
 std::queue<unsigned> myQueue;
 //spinlock instead of mutex:
-pthread_spinlock_t spinlock;
-bool producer_finished = false;
+pthread_cond_t cond;
+pthread_mutex_t mutex;
 
 
 void* thread_function(void* arg){
@@ -18,16 +18,25 @@ void* thread_function(void* arg){
     unsigned queue_entry = -1;
     int local_sum = 0;
 
-    //NOTE Wait until the producer is finished to avoid the threads consume faster than the producer can push, thus leading to premature thread exits.
-    while(!producer_finished);
 
-    while(!myQueue.empty()){
+    while(1){
 
-        //wait for mutex
-        pthread_spin_lock(&spinlock);
+        //set mutex to the required position for the following pthread_cond_wait.
+        pthread_mutex_lock(&mutex);
+
+        //effectively not a spinlock, since pthread_cond_wait sleeps until signal
+        while(myQueue.empty()){
+            //unlocks mutex , locks it again when signal comes in (new data available) and then proceeds
+            pthread_cond_wait(&cond, &mutex);
+        }
+
+        //there must be new data in the queue now
+
         queue_entry = myQueue.front();
         myQueue.pop();
-        pthread_spin_unlock(&spinlock);
+
+        //unlock mutex again for producer locked by the returning pthread_cond_wait
+        pthread_mutex_unlock(&mutex);
 
         if(queue_entry != 0){
             local_sum += queue_entry;
@@ -50,7 +59,8 @@ int main(int argc, char const *argv[]) {
     pthread_t thread_array[MAX_THREADS];
 
     //init spinlock
-    pthread_spin_init(&spinlock, 0);
+    pthread_cond_init(&cond, NULL);
+    pthread_mutex_init(&mutex, NULL);
 
     //start 4 threads
     for(int i = 0; i < MAX_THREADS; i++){
@@ -58,15 +68,24 @@ int main(int argc, char const *argv[]) {
     }
 
     for(int i = 0; i < 100000; i++){
+
+
+        pthread_mutex_lock(&mutex);
         myQueue.push(1u);
+        //signal that data is available
+        pthread_cond_signal(&cond);
+        //unlock condvar mutex
+        pthread_mutex_unlock(&mutex);
     }
 
     for( int i = 0; i < 4; i++){
-        myQueue.push(0u);
-    }
 
-    //signal threads to start consuming. Not very parallel, but very safe in this case.
-    producer_finished = true;
+        pthread_mutex_lock(&mutex);
+        myQueue.push(0u);
+        //signal that data is available
+        pthread_cond_signal(&cond);
+        //unlock condvar mutex
+        pthread_mutex_unlock(&mutex);    }
 
     //join threads
     for(int i = 0; i < MAX_THREADS; i++){

@@ -7,3 +7,4 @@ task2: thread_and_mutex.cpp
 task3: thread_and_mutex_wspinlock.cpp thread_and_mutex_wcondvar.cpp
 	g++ thread_and_mutex_wspinlock.cpp -o task3spin.out -pthread
 	g++ thread_and_mutex_wcondvar.cpp -o task3convar.out -pthread
+	
