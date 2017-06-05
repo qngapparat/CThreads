@@ -19,4 +19,4 @@ However, it is necessary to use a while-loop as follows:
         pthread_cond_wait(&queueCond, &queueMutex);
     }
 
-This is because it is possible that ```pthread_cond_wait``` can experience random "spurious wakeups", which would otherwise lead to the execution being resumed without necessarily ```!RESUME``` being ```true```. [[1](https://stackoverflow.com/documentation/pthreads/8614/conditional-variables#t=201706051640532619188)]
+This is because it is possible that ```pthread_cond_wait``` can experience random "spurious wakeups", which would otherwise lead to the execution being resumed without necessarily ```!RESUME``` being ```true```.  [[1](https://stackoverflow.com/documentation/pthreads/8614/conditional-variables#t=201706051640532619188)]
