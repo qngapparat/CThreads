@@ -64,7 +64,7 @@ int main(int argc, char const *argv[]) {
 
     //create 10 threads starting at function generate_file(i).
     for(int i = 0; i < MAX_THREADS; i++){
-        watch( pthread_create(&thread_id_array[i], NULL, &generate_file, &i) , "pthread_create");
+        pthread_create(&thread_id_array[i], NULL, &generate_file, &i);
     }
 
     //cancel every thread with 50% probability
@@ -79,7 +79,7 @@ int main(int argc, char const *argv[]) {
         pthread_join(thread_id_array[i], (void**) &thread_return_array[i]);
         if((int)thread_id_array[i] <= 0){
             printf("Thread #%d (%d) cancelled.\n", i, (int)thread_id_array[i]);
-        } 
+        }
 
         else{
             printf("Thread #%d (%d) exited correctly.\n", i, (int)thread_id_array[i]);
