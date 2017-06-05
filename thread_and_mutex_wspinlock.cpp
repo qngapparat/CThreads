@@ -7,7 +7,8 @@
 #include <stdbool.h>
 
 std::queue<unsigned> myQueue;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+//spinlock instead of mutex:
+pthread_spinlock_t spinlock;
 bool producer_finished = false;
 
 
@@ -23,10 +24,10 @@ void* thread_function(void* arg){
     while(!myQueue.empty()){
 
         //wait for mutex
-        pthread_mutex_lock(&mutex);
+        pthread_spin_lock(&spinlock);
         queue_entry = myQueue.front();
         myQueue.pop();
-        pthread_mutex_unlock(&mutex);
+        pthread_spin_unlock(&spinlock);
 
         if(queue_entry != 0){
             local_sum += queue_entry;
@@ -47,7 +48,9 @@ int main(int argc, char const *argv[]) {
 
     const int MAX_THREADS = 4;
     pthread_t thread_array[MAX_THREADS];
-    pthread_mutex_init(&mutex, NULL);
+
+    //init spinlock
+    pthread_spin_init(&spinlock, 0);
 
     //start 4 threads
     for(int i = 0; i < MAX_THREADS; i++){

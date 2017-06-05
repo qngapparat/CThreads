@@ -3,7 +3,6 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
-#include "error_handler.h"
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -38,7 +37,7 @@ void* generate_file(void* thread_number_pointer){
     strcat(file_name, file_name_appendix);
     strcat(file_name, ".txt");
 
-    FILE* f = fopen(file_name, "rw");
+    FILE* f = fopen(file_name, "w");
 
     //create and push cancellation handler function (cleanup) to threads' handler stack with passed argument "f".
     pthread_cleanup_push(cleanup, f);
