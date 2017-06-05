@@ -3,8 +3,9 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
-#include "error_handler.c"
+#include "error_handler.h"
 #include <sys/types.h>
+#include <unistd.h>
 
 const int MAX_THREADS = 10;
 
@@ -18,6 +19,7 @@ void cleanup(void* arg){
         exit(EXIT_FAILURE);
     }
 
+
     return;
 }
 
@@ -25,28 +27,30 @@ void cleanup(void* arg){
 void* generate_file(void* thread_number_pointer){
 
     //cast to integer
-    int thread_number;
-    thread_number = (int) thread_number_pointer;
+    int* thread_number;
+    thread_number = (int*) thread_number_pointer;
 
     //generate file name string
     char file_name[] = "./thread";
-    char file_name_appendix[] = (char*)thread_number;
+    char file_name_appendix[8];
+    sprintf(file_name_appendix, "%d", *thread_number);
 
     strcat(file_name, file_name_appendix);
     strcat(file_name, ".txt");
 
-    FILE* f = fopen(file_name, "w");
+    FILE* f = fopen(file_name, "rw");
 
-    //create and push cancellation handler function to threads' handler stack
+    //create and push cancellation handler function (cleanup) to threads' handler stack with passed argument "f".
     pthread_cleanup_push(cleanup, f);
-    //disable all cancellation handler blockers
 
-    sleep(rand() % 2);
+    sleep(rand()%2);
 
-    fprintf(f, "%d", (int)gettid());
+    fprintf(f, "%d", (int)pthread_self());
 
-    //exit thread after calling cancellation handler
-    pthread_exit(gettid());
+    //remove cancellation handler after critical region (0 == without executing it).
+    pthread_cleanup_pop(0);
+    //exit thread and return thread-id to pthread_join that waits for all processes to catch up.
+    pthread_exit((void*)pthread_self());
 
 }
 
@@ -60,7 +64,7 @@ int main(int argc, char const *argv[]) {
 
     //create 10 threads starting at function generate_file(i).
     for(int i = 0; i < MAX_THREADS; i++){
-        watch( pthread_create(&thread_id_array[i], NULL, &generate_file, (void*) i) , "pthread_create");
+        watch( pthread_create(&thread_id_array[i], NULL, &generate_file, &i) , "pthread_create");
     }
 
     //cancel every thread with 50% probability
@@ -72,13 +76,13 @@ int main(int argc, char const *argv[]) {
 
     //wait for threads to join, save return values in array
     for(int i = 0; i < MAX_THREADS; i++){
-        pthread_join(&thread_id_array[i], (void**) &thread_return_array[i]);
-        if(thread_id_array[i] <= 0){
-            printf("Thread #%d (%d) cancelled.\n", i, thread_id_array[i]);
+        pthread_join(thread_id_array[i], (void**) &thread_return_array[i]);
+        if((int)thread_id_array[i] <= 0){
+            printf("Thread #%d (%d) cancelled.\n", i, (int)thread_id_array[i]);
         }
 
         else{
-            printf("Thread #%d (%d) exited correctly.\n", i, thread_id_array[i]);
+            printf("Thread #%d (%d) exited correctly.\n", i, (int)thread_id_array[i]);
         }
     }
 
